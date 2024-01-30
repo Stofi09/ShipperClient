@@ -25,3 +25,52 @@ Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To u
 ## Further help
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+public void ZipAndUpload(string file1Path, string file2Path, string remotePath)
+{
+    using (var sftp = new SftpClient(host, username, password))
+    {
+        try
+        {
+            sftp.Connect();
+
+            string tempZipPath = Path.GetTempFileName();
+
+            using (var zip = ZipFile.Open(tempZipPath, ZipArchiveMode.Create))
+            {
+                zip.CreateEntryFromFile(file1Path, Path.GetFileName(file1Path));
+                zip.CreateEntryFromFile(file2Path, Path.GetFileName(file2Path));
+            }
+
+            using (var fileStream = new FileStream(tempZipPath, FileMode.Open))
+            {
+                sftp.UploadFile(fileStream, remotePath);
+            }
+
+            // Optional: Check if the upload was successful by comparing file sizes
+            var localFileInfo = new FileInfo(tempZipPath);
+            var remoteFileInfo = sftp.GetAttributes(remotePath);
+            if (remoteFileInfo != null && localFileInfo.Length == remoteFileInfo.Size)
+            {
+                Console.WriteLine("Upload successful and file sizes match.");
+            }
+            else
+            {
+                Console.WriteLine("Upload may have failed or file sizes do not match.");
+            }
+
+            File.Delete(tempZipPath);
+
+            sftp.Disconnect();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error: " + ex.Message);
+        }
+    }
+}
+}
+
+// Usage example:
+// var uploader = new SftpUploader("sftp.example.com", "username", "password");
+// uploader.ZipAndUpload(@"C:\path\to\file1.txt", @"C:\path\to\file2.txt", "/remote/path/destination.zip");
