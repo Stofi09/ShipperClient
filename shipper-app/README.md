@@ -70,6 +70,40 @@ public void ZipAndUpload(string file1Path, string file2Path, string remotePath)
     }
 }
 }
+@model IEnumerable<YourNamespace.YourModel>
+
+@foreach (var item in Model) {
+    <div class="clickable-div" data-item-id="@item.Id">@Html.DisplayFor(modelItem => item.Name)</div>
+}
+
+<style>
+.clickable-div {
+    cursor: pointer;
+    /* Add more styling here */
+}
+</style>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('.clickable-div').click(function() {
+        var itemId = $(this).data('item-id'); // Get the item ID
+        $.ajax({
+            url: '/YourController/YourAction',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ id: itemId }),
+            success: function(response) {
+                console.log(response); // Handle success
+            },
+            error: function(error) {
+                console.error(error); // Handle error
+            }
+        });
+    });
+});
+</script>
+
 
 // Usage example:
 // var uploader = new SftpUploader("sftp.example.com", "username", "password");
